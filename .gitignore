@@ -1,0 +1,13 @@
+# Raw data (personal data, not to be shared)
+data/input/*
+
+# Mapping file (personal data, not to be shared)
+data/id_map.csv
+
+# Anonymised data (can be shared, but not needed in repo)
+data/output_data/*
+
+# Standard Python ignores
+__pycache__/
+*.pyc
+.env
