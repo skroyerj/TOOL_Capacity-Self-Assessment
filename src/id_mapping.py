@@ -25,8 +25,6 @@ NAME_COLUMN = "Navn"      # hvis du har navne i en kolonne
 
 # læs eksisterende mapping hvis den findes
 
-print("🔐 Anonymiserer data...")
-
 if ID_MAP_FILE.exists():
     id_map = pd.read_csv(ID_MAP_FILE, dtype=str).set_index(EMAIL_COLUMN)["Anon_ID"].to_dict()
 else:
@@ -50,8 +48,8 @@ for infile in INPUT_FILES:
     
         outfile = OUTPUT_DIR / f"{infile.stem}_anon.xlsx"
         df.to_excel(outfile, index=False)
-        print(f"✔ Anonymiseret {infile} → {outfile}")
+        print(f"Anonymised {infile} → {outfile}")
 
 # gem opdateret mapping til sidst
 pd.DataFrame(list(id_map.items()), columns=[EMAIL_COLUMN, "Anon_ID"]).to_csv(ID_MAP_FILE, index=False)
-print(f"✔ Mapping opdateret: {ID_MAP_FILE}")
+print(f"Mapping updated: {ID_MAP_FILE}")
