@@ -1,5 +1,5 @@
 # Raw data (personal data, not to be shared)
-data/input/*
+data/input_data/*
 
 # Mapping file (personal data, not to be shared)
 data/id_map.csv
