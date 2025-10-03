@@ -4,8 +4,50 @@
 PARTICIPANT_INFO_AGREEMENT = "I have read the participant information and consent to my data being collected and used in anonymised form for this study."
 
 
+# --------------------------------
+# Questions to include in the analysis:
+MOTIVATION = [
+    "I felt confident in working with the methodology today. .",
+    "Please indicate how much you agree with the following statements today..I am interested in the methodology of this course",
+    "Please indicate how much you agree with the following statements today..This course is relevant for me in my future",
+    "Please indicate how much you agree with the following statements today..I want to gain practical knowledge",
+    "Please indicate how much you agree with the following statements today..I want to gain theoretical knowledge",
+    "Please indicate how much you agree with the following statements today..I feel like I know more than I did last week",
+    "I feel that I have influence and responsibility in my group, and that my inclusion and opinions are valued.."
+]
+
+CAPACITY = [
+    "I feel like I can use my (priorly learned) skills in the course..",
+    "I feel like I am acquiring new skills every week with the Agile methodology. .",
+    "To perform the tasks today, I felt like seeking support from....The teacher",
+    "To perform the tasks today, I felt like seeking support from....The TA's",
+    "To perform the tasks today, I felt like seeking support from....Other students"
+]
+
+UNCERTAINTY = [
+    "How much uncertainty do you encounter in this course regarding the end goal at this point? .",
+    "How much uncertainty did you encounter in the Agile methodology from today? .",
+    "How easy or difficult would it be to make changes to your design at this stage? ."
+]
+
+likert_6pt = ["Completely agree", "Mostly agree", "Slightly agree", "Slightly disagree", "Mostly disagree", "Completely disagree"]
+
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 from pathlib import Path
+
+import sort_education
+import plotting_data
+
+def count_columns(df, columns_to_count):
+    counted_df = pd.DataFrame()
+    for col in columns_to_count:
+        counts = df[col].value_counts()
+        counts = counts.reindex(likert_6pt, fill_value=0)
+        counted_df[col] = counts
+
+    return counted_df
 
 
 ANON_FILES = [
@@ -22,7 +64,7 @@ ANON_FILES = [
 cols_to_remove = ()
 
 def columns_to_remove(dataframe):
-    all_cols = list(df.columns)
+    all_cols = list(dataframe.columns)
 
     cols_to_remove = all_cols[0:6] # Remove first 7 columns
     cols_to_remove += [col for col in all_cols if "Point" in col]
@@ -30,19 +72,17 @@ def columns_to_remove(dataframe):
 
     return cols_to_remove
 
+# Get columns to remove from the first file (assuming all files have the same structure)
+cols_to_remove = list(columns_to_remove(pd.read_excel(ANON_FILES[0])))
+
 # Clean up data
 for file in ANON_FILES:
     if not file.exists():
-        print("file not found")
+        continue
     else:
         df = pd.read_excel(file)
 
-        # Have columns to remove already been identified?
-        if not cols_to_remove:
-            cols_to_remove = list(columns_to_remove(df))
-            # print(f"Columns to remove: {cols_to_remove}")
-        else:
-            continue
+        # df.set_index("Anon_ID", inplace=True)
 
         # Remove unwanted columns from each dataframe
         for col in cols_to_remove:
@@ -54,6 +94,40 @@ for file in ANON_FILES:
 
         # Only include those who agreed to participate:
         df = df[df[PARTICIPANT_INFO_AGREEMENT] == "Yes"]
+
+        df = sort_education.sort_by_masters(df)
+
+
+        # ---------------------------------------------
+        # How many on each master's programme?
+        # print(df["What master's programme did you follow?"].value_counts())
+
+        # print(df["What master's programme did you follow?"])
+        # ---------------------------------------------
+
+        # TEST = df["Please indicate how much you agree with the following statements today..This course is relevant for me in my future"].value_counts()
+        
+        # TEST = TEST.reindex(["Completely agree", "Mostly agree", "Slightly agree", "Slightly disagree", "Mostly disagree", "Completely disagree"], fill_value=0)
+        # # print("Efter sortering", TEST)
+        
+        columns_to_count = MOTIVATION + CAPACITY + UNCERTAINTY
+
+        
+
+        TEST2 = count_columns(df, columns_to_count)
+
+        TEST2 = count_columns(df, MOTIVATION)
+        print("TEST2:")
+            
+    print(TEST2.transpose())
+
+fig, ax = plotting_data.survey(TEST2.transpose())
+plt.show()
+
+
+
+
+
 
         
 
