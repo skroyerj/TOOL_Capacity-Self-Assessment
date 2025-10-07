@@ -30,7 +30,7 @@ UNCERTAINTY = [
     "How easy or difficult would it be to make changes to your design at this stage? ."
 ]
 
-likert_6pt = ["Completely agree", "Mostly agree", "Slightly agree", "Slightly disagree", "Mostly disagree", "Completely disagree"]
+likert_6pt = ["Completely disagree", "Mostly disagree", "Slightly disagree", "Slightly agree", "Mostly agree", "Completely agree"]
 
 import pandas as pd
 import matplotlib.pyplot as plt
