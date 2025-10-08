@@ -121,7 +121,7 @@ for file in ANON_FILES:
             
     print(TEST2.transpose())
 
-fig, ax = plotting_data.survey(TEST2.transpose())
+fig, ax = plotting_data.butterfly(TEST2.transpose())
 plt.show()
 
 
