@@ -121,9 +121,14 @@ for file in ANON_FILES:
             
     print(TEST2.transpose())
 
-fig, ax = plotting_data.butterfly(TEST2.transpose())
-plt.show()
+# fig, ax = plotting_data.butterfly(TEST2.transpose())
+# plt.show()
 
+import test
+
+timeseries = test.time_series_df(TEST2, "I felt confident in working with the methodology today. .")
+
+print(timeseries)
 
 
 

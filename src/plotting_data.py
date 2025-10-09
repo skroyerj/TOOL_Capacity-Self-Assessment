@@ -87,3 +87,5 @@ def stacked_area(dataframe):
     fig.show()
 
     return fig
+
+fig = stacked_area(None)
