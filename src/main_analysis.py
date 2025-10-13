@@ -7,13 +7,13 @@ PARTICIPANT_INFO_AGREEMENT = "I have read the participant information and consen
 # --------------------------------
 # Questions to include in the analysis:
 MOTIVATION = [
-    "I felt confident in working with the methodology today. .",
-    "Please indicate how much you agree with the following statements today..I am interested in the methodology of this course",
-    "Please indicate how much you agree with the following statements today..This course is relevant for me in my future",
-    "Please indicate how much you agree with the following statements today..I want to gain practical knowledge",
-    "Please indicate how much you agree with the following statements today..I want to gain theoretical knowledge",
-    "Please indicate how much you agree with the following statements today..I feel like I know more than I did last week",
-    "I feel that I have influence and responsibility in my group, and that my inclusion and opinions are valued.."
+    "I felt confident in working with the methodology today",
+    "I am interested in the methodology of this course",
+    "This course is relevant for me in my future",
+    "I want to gain practical knowledge",
+    "I want to gain theoretical knowledge",
+    "I feel like I know more than I did last week",
+    "I feel that I have influence and responsibility in my group, and that my inclusion and opinions are valued"
 ]
 
 CAPACITY = [
@@ -43,7 +43,7 @@ import plotting_data
 def count_columns(df, columns_to_count):
     counted_df = pd.DataFrame()
     for col in columns_to_count:
-        counts = df[col].value_counts()
+        counts = df[col].value_counts(dropna=False)
         counts = counts.reindex(likert_6pt, fill_value=0)
         counted_df[col] = counts
 
@@ -66,7 +66,7 @@ cols_to_remove = ()
 def columns_to_remove(dataframe):
     all_cols = list(dataframe.columns)
 
-    cols_to_remove = all_cols[0:6] # Remove first 7 columns
+    cols_to_remove = all_cols[0:5] # Remove first 5 columns
     cols_to_remove += [col for col in all_cols if "Point" in col]
     cols_to_remove += [col for col in all_cols if "Feedback –" in col]
 
@@ -92,10 +92,13 @@ for file in ANON_FILES:
         # print(f"Remaining columns: {df.columns}")
 
 
+        print(f"TESTING {file}...")
+        print(df.columns)
+    
         # Only include those who agreed to participate:
-        df = df[df[PARTICIPANT_INFO_AGREEMENT] == "Yes"]
+        df = df[[PARTICIPANT_INFO_AGREEMENT]] == "Yes"
 
-        df = sort_education.sort_by_masters(df)
+        # df = sort_education.sort_by_masters(df)
 
 
         # ---------------------------------------------
@@ -105,7 +108,7 @@ for file in ANON_FILES:
         # print(df["What master's programme did you follow?"])
         # ---------------------------------------------
 
-        # TEST = df["Please indicate how much you agree with the following statements today..This course is relevant for me in my future"].value_counts()
+        # TEST = df["This course is relevant for me in my future"].value_counts()
         
         # TEST = TEST.reindex(["Completely agree", "Mostly agree", "Slightly agree", "Slightly disagree", "Mostly disagree", "Completely disagree"], fill_value=0)
         # # print("Efter sortering", TEST)
@@ -126,7 +129,7 @@ for file in ANON_FILES:
 
 import test
 
-timeseries = test.time_series_df(TEST2, "I felt confident in working with the methodology today. .")
+timeseries = test.time_series_df(TEST2, "I felt confident in working with the methodology today.")
 
 print(timeseries)
 

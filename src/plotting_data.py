@@ -58,25 +58,28 @@ def butterfly(dataframe):
 
 
 def stacked_area(dataframe):
-    x=['Winter', 'Spring', 'Summer', 'Fall']
+
+    category_names = dataframe.columns.tolist()
+    questions = dataframe.index.tolist()
+    x = list(questions)
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=x, y=[40, 60, 40, 10],
+        x=x, y=dataframe.iloc[:,1].to_numpy(),
         hoverinfo='x+y',
         mode='lines',
         line=dict(width=0.5, color='rgb(131, 90, 241)'),
         stackgroup='one' # define stack group
     ))
     fig.add_trace(go.Scatter(
-        x=x, y=[20, 10, 10, 60],
+        x=x, y=dataframe.iloc[:,2].to_numpy(),
         hoverinfo='x+y',
         mode='lines',
         line=dict(width=0.5, color='rgb(111, 231, 219)'),
         stackgroup='one'
     ))
     fig.add_trace(go.Scatter(
-        x=x, y=[40, 30, 50, 30],
+        x=x, y=dataframe.iloc[:,3].to_numpy(),
         hoverinfo='x+y',
         mode='lines',
         line=dict(width=0.5, color='rgb(184, 247, 212)'),
@@ -87,5 +90,3 @@ def stacked_area(dataframe):
     fig.show()
 
     return fig
-
-fig = stacked_area(None)
