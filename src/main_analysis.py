@@ -17,18 +17,24 @@ MOTIVATION = [
 ]
 
 CAPACITY = [
-    "I feel like I can use my (priorly learned) skills in the course..",
-    "I feel like I am acquiring new skills every week with the Agile methodology. .",
-    "To perform the tasks today, I felt like seeking support from....The teacher",
-    "To perform the tasks today, I felt like seeking support from....The TA's",
-    "To perform the tasks today, I felt like seeking support from....Other students"
+    "I feel like I can use my (priorly learned) skills in the course",
+    "I feel like I am acquiring new skills every week with the Agile methodology",
+    "The teacher",
+    "The TA's",
+    "Other students"
 ]
 
 UNCERTAINTY = [
-    "How much uncertainty do you encounter in this course regarding the end goal at this point? .",
-    "How much uncertainty did you encounter in the Agile methodology from today? .",
-    "How easy or difficult would it be to make changes to your design at this stage? ."
+    "How much uncertainty do you encounter in this course regarding the end goal at this point?",
+    "How much uncertainty did you encounter in the Agile methodology from today?",
+    "How easy or difficult would it be to make changes to your design at this stage?"
 ]
+'''What is relevant to include in the dataframe:'''
+INFO = ["Anon_ID"] + [PARTICIPANT_INFO_AGREEMENT]
+
+ALL_Qs = MOTIVATION + CAPACITY + UNCERTAINTY
+
+include_in_df = INFO + ALL_Qs
 
 likert_6pt = ["Completely disagree", "Mostly disagree", "Slightly disagree", "Slightly agree", "Mostly agree", "Completely agree"]
 
@@ -40,11 +46,13 @@ from pathlib import Path
 import sort_education
 import plotting_data
 
-def count_columns(df, columns_to_count):
+def count_columns(df, columns_to_count, index):
+    """ Count occurrences of answers in specified columns. """
     counted_df = pd.DataFrame()
     for col in columns_to_count:
+        print(f"Counting column: {col}\n")
         counts = df[col].value_counts(dropna=False)
-        counts = counts.reindex(likert_6pt, fill_value=0)
+        counts = counts.reindex(index, fill_value=0)
         counted_df[col] = counts
 
     return counted_df
@@ -61,77 +69,43 @@ ANON_FILES = [
           Path("data/output_data/AGILE_12_anon.xlsx"),
           Path("data/output_data/AGILE_13_anon.xlsx")]
 
-cols_to_remove = ()
 
-def columns_to_remove(dataframe):
-    all_cols = list(dataframe.columns)
+dfs = {}
 
-    cols_to_remove = all_cols[0:5] # Remove first 5 columns
-    cols_to_remove += [col for col in all_cols if "Point" in col]
-    cols_to_remove += [col for col in all_cols if "Feedback –" in col]
-
-    return cols_to_remove
-
-# Get columns to remove from the first file (assuming all files have the same structure)
-cols_to_remove = list(columns_to_remove(pd.read_excel(ANON_FILES[0])))
-
-# Clean up data
 for file in ANON_FILES:
     if not file.exists():
+        print(f"File {file} does not exist, skipping...")
         continue
     else:
-        df = pd.read_excel(file)
+        print(f"TESTING {file}...")
 
+        init_df = pd.read_excel(file)
+
+        # Only include those who agreed to participate:
+        df = init_df[init_df[PARTICIPANT_INFO_AGREEMENT] == "Yes"]
+        week_name = "Week" + file.stem.split("_")[1]
         # df.set_index("Anon_ID", inplace=True)
 
-        # Remove unwanted columns from each dataframe
-        for col in cols_to_remove:
-            # print(f"Removing column: {col}")
-            df = df.drop(columns=col)
+        # Only include relevant columns:
+        dfs[week_name] = init_df[include_in_df].copy()
 
-        # print(f"Remaining columns: {df.columns}")
+# TEST = count_columns(dfs["Week5"],["This course is relevant for me in my future"], likert_6pt)
+# print("Value count test:\n", TEST)
 
-
-        print(f"TESTING {file}...")
-        print(df.columns)
     
-        # Only include those who agreed to participate:
-        df = df[[PARTICIPANT_INFO_AGREEMENT]] == "Yes"
-
-        # df = sort_education.sort_by_masters(df)
-
-
-        # ---------------------------------------------
-        # How many on each master's programme?
-        # print(df["What master's programme did you follow?"].value_counts())
-
-        # print(df["What master's programme did you follow?"])
-        # ---------------------------------------------
-
-        # TEST = df["This course is relevant for me in my future"].value_counts()
-        
-        # TEST = TEST.reindex(["Completely agree", "Mostly agree", "Slightly agree", "Slightly disagree", "Mostly disagree", "Completely disagree"], fill_value=0)
-        # # print("Efter sortering", TEST)
-        
-        columns_to_count = MOTIVATION + CAPACITY + UNCERTAINTY
-
-        
-
-        TEST2 = count_columns(df, columns_to_count)
-
-        TEST2 = count_columns(df, MOTIVATION)
-        print("TEST2:")
-            
-    print(TEST2.transpose())
+# count_week_5 = count_columns(dfs["Week5"], MOTIVATION, likert_6pt)
 
 # fig, ax = plotting_data.butterfly(TEST2.transpose())
 # plt.show()
 
 import test
 
-timeseries = test.time_series_df(TEST2, "I felt confident in working with the methodology today.")
+
+timeseries = test.time_series_df(dfs, "I felt confident in working with the methodology today", "Anon_ID",False)
 
 print(timeseries)
+
+# fig2 = plotting_data.stacked_area(timeseries)
 
 
 

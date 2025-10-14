@@ -7,3 +7,16 @@ def sort_by_masters(df):
 
 
 # To replace specific data: df.loc[RowNumber, 'ColumnName'] = Replacement
+
+
+
+
+# df = sort_education.sort_by_masters(df)
+
+
+# ---------------------------------------------
+# How many on each master's programme?
+# print(df["What master's programme did you follow?"].value_counts())
+
+# print(df["What master's programme did you follow?"])
+# ---------------------------------------------

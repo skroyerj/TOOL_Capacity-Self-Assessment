@@ -57,6 +57,10 @@ def butterfly(dataframe):
     return fig, ax
 
 
+# ----------------------------------------------------------
+# Stacked Area Chart
+# ----------------------------------------------------------
+
 def stacked_area(dataframe):
 
     category_names = dataframe.columns.tolist()
