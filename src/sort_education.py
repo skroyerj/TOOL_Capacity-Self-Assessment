@@ -1,7 +1,9 @@
 def sort_by_masters(df):
 
-    sorted_df = df.sort_values(by="What master's programme did you follow?", key=lambda col: col.str.lower())
-    
+    df["Education"] = df["What master's programme do you follow?"]
+    df.loc[df["What master's programme did you follow?"] == "I am still on my bachelor's", "Education"] = df["What bachelor's programme did you follow?"]
+    sorted_df = df.sort_values(by="Education", key=lambda col: col.str.lower())
+
     return sorted_df
 
 

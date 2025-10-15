@@ -89,8 +89,7 @@ def stacked_area(counted_df,question):
         hoverinfo='y+text',
         mode='lines',
         line=dict(width=0.5, color='#c74444'),
-        stackgroup='second',
-        groupnorm='percent' # sets the normalization for the sum of the stackgroup
+        stackgroup='one'
     ))
     fig.add_trace(go.Scatter(
         x=x, y=counted_df.iloc[2,:].to_numpy(),

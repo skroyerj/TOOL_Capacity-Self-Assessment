@@ -30,7 +30,7 @@ UNCERTAINTY = [
     "How easy or difficult would it be to make changes to your design at this stage?"
 ]
 '''What is relevant to include in the dataframe:'''
-INFO = ["Anon_ID"] + [PARTICIPANT_INFO_AGREEMENT]
+INFO = ["Anon_ID", "Education"] + [PARTICIPANT_INFO_AGREEMENT]
 
 ALL_Qs = MOTIVATION + CAPACITY + UNCERTAINTY
 
@@ -84,6 +84,11 @@ for file in ANON_FILES:
 
         # Only include those who agreed to participate:
         df = init_df[init_df[PARTICIPANT_INFO_AGREEMENT] == "Yes"]
+
+        print(f"columns in df: {df["What master's programme do you follow?"]}")
+
+        df = sort_education.sort_by_masters(df)
+
         week_name = "Week" + file.stem.split("_")[1]
         week_list.append(week_name)
         # df.set_index("Anon_ID", inplace=True)
@@ -101,7 +106,6 @@ for file in ANON_FILES:
 # plt.show()
 
 import test
-
 
 timeseries = test.time_series_df(dfs, "I felt confident in working with the methodology today", "Anon_ID",False)
 
