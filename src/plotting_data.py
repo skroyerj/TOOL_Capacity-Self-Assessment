@@ -3,15 +3,15 @@ import plotly.graph_objects as go
 import numpy as np
 
 
-def butterfly(dataframe):
+def butterfly(counted_df):
 
     """ Plot modified from ethanlees on Stackoverflow: https://stackoverflow.com/a/69976552"""
 
-    category_names = dataframe.columns.tolist()
-    questions = dataframe.index.tolist()
+    category_names = counted_df.columns.tolist()
+    questions = counted_df.index.tolist()
 
     labels = list(questions)
-    data = dataframe.to_numpy()
+    data = counted_df.to_numpy()
     data_cum = data.cumsum(axis=1)
     middle_index = data.shape[1]//2
     offsets = data[:, range(middle_index)].sum(axis=1) # Always on
@@ -61,36 +61,84 @@ def butterfly(dataframe):
 # Stacked Area Chart
 # ----------------------------------------------------------
 
-def stacked_area(dataframe):
+def stacked_area(counted_df,question):
+    """ Create a stacked area chart with plotly. Use a counted dataframe as input. """
 
-    category_names = dataframe.columns.tolist()
-    questions = dataframe.index.tolist()
-    x = list(questions)
+    # Colors from https://coolors.co/8d2a2a-c74444-ee6d6d-7a9acd-436db1-325285
+    # #8d2a2a, #c74444, #ee6d6d, #7a9acd, #436db1, #325285
+
+    weeks = counted_df.columns.tolist()
+    index = counted_df.index.tolist()
+    x = list(weeks)
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=x, y=dataframe.iloc[:,1].to_numpy(),
-        hoverinfo='x+y',
+        x=x, y=counted_df.iloc[0,:].to_numpy(),
+        name=index[0],
+        text=index[0],
+        hoverinfo='y+text',
         mode='lines',
-        line=dict(width=0.5, color='rgb(131, 90, 241)'),
-        stackgroup='one' # define stack group
+        line=dict(width=0.5, color='#8d2a2a'),
+        stackgroup='one', # define stack group
+        groupnorm='percent' # sets the normalization for the sum of the stackgroup
     ))
     fig.add_trace(go.Scatter(
-        x=x, y=dataframe.iloc[:,2].to_numpy(),
-        hoverinfo='x+y',
+        x=x, y=counted_df.iloc[1,:].to_numpy(),
+        name=index[1],
+        text=index[1],
+        hoverinfo='y+text',
         mode='lines',
-        line=dict(width=0.5, color='rgb(111, 231, 219)'),
+        line=dict(width=0.5, color='#c74444'),
+        stackgroup='second',
+        groupnorm='percent' # sets the normalization for the sum of the stackgroup
+    ))
+    fig.add_trace(go.Scatter(
+        x=x, y=counted_df.iloc[2,:].to_numpy(),
+        name=index[2],
+        text=index[2],
+        hoverinfo='y+text',
+        mode='lines',
+        line=dict(width=0.5, color='#ee6d6d'),
         stackgroup='one'
     ))
     fig.add_trace(go.Scatter(
-        x=x, y=dataframe.iloc[:,3].to_numpy(),
-        hoverinfo='x+y',
+        x=x, y=counted_df.iloc[3,:].to_numpy(),
+        name=index[3],
+        text=index[3],
+        hoverinfo='y+text',
         mode='lines',
-        line=dict(width=0.5, color='rgb(184, 247, 212)'),
+        line=dict(width=0.5, color='#7a9acd'),
+        stackgroup='one'
+    ))
+    fig.add_trace(go.Scatter(
+        x=x, y=counted_df.iloc[4,:].to_numpy(),
+        name=index[4],
+        text=index[4],
+        hoverinfo='y+text',
+        mode='lines',
+        line=dict(width=0.5, color='#436db1'),
+        stackgroup='one'
+    ))
+    fig.add_trace(go.Scatter(
+        x=x, y=counted_df.iloc[5,:].to_numpy(),
+        name=index[5],
+        text=index[5],
+        hoverinfo='y+text',
+        mode='lines',
+        line=dict(width=0.5, color='#325285'),
         stackgroup='one'
     ))
 
-    fig.update_layout(yaxis_range=(0, 100))
+    fig.update_layout(
+    title = question,
+    showlegend=True,
+    xaxis_type='category',
+    yaxis=dict(
+        type='linear',
+        range=[0, 100],
+        ticksuffix='%'))
+    # fig.update_layout(yaxis_range=(0, 100))
+    
     fig.show()
 
     return fig

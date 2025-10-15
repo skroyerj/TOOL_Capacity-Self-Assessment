@@ -12,7 +12,7 @@ def time_series_df(dfs, question, index_by, to_excel=False):
     for week_name, df in dfs.items():
         week_dfs.append(df[[index_by, question]].rename(columns={question: week_name}))
 
-    time_series = reduce(lambda left, right: pd.merge(left, right, on=index_by, how="outer"), week_dfs)#.fillna(0)
+    time_series = reduce(lambda left, right: pd.merge(left, right, on=index_by, how="outer"), week_dfs).fillna(0)
 
     time_series = time_series.sort_values(index_by).reset_index(drop=True)
 

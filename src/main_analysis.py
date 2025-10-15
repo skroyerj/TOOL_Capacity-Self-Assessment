@@ -71,6 +71,7 @@ ANON_FILES = [
 
 
 dfs = {}
+week_list = []
 
 for file in ANON_FILES:
     if not file.exists():
@@ -84,6 +85,7 @@ for file in ANON_FILES:
         # Only include those who agreed to participate:
         df = init_df[init_df[PARTICIPANT_INFO_AGREEMENT] == "Yes"]
         week_name = "Week" + file.stem.split("_")[1]
+        week_list.append(week_name)
         # df.set_index("Anon_ID", inplace=True)
 
         # Only include relevant columns:
@@ -103,9 +105,11 @@ import test
 
 timeseries = test.time_series_df(dfs, "I felt confident in working with the methodology today", "Anon_ID",False)
 
-print(timeseries)
+count_timeseries = count_columns(timeseries, week_list, likert_6pt)
+print("Timeseries:\n", timeseries)
+print("Counted timeseries:\n", count_timeseries)
 
-# fig2 = plotting_data.stacked_area(timeseries)
+fig2 = plotting_data.stacked_area(count_timeseries, "I felt confident in working with the methodology today")
 
 
 
