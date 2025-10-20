@@ -30,7 +30,7 @@ UNCERTAINTY = [
     "How easy or difficult would it be to make changes to your design at this stage?"
 ]
 '''What is relevant to include in the dataframe:'''
-INFO = ["Anon_ID", "Education"] + [PARTICIPANT_INFO_AGREEMENT]
+INFO = ["Anon_ID"] + [PARTICIPANT_INFO_AGREEMENT]
 
 ALL_Qs = MOTIVATION + CAPACITY + UNCERTAINTY
 
@@ -45,6 +45,7 @@ from pathlib import Path
 
 import sort_education
 import plotting_data
+import timeseries
 
 def count_columns(df, columns_to_count, index):
     """ Count occurrences of answers in specified columns. """
@@ -70,31 +71,36 @@ ANON_FILES = [
           Path("data/output_data/AGILE_13_anon.xlsx")]
 
 
-dfs = {}
-week_list = []
+def read_and_sort(files: list[Path], columns_to_include: str()) -> pd.DataFrame:
+    """ Read and sort data files into a dictionary of dataframes."""
 
-for file in ANON_FILES:
-    if not file.exists():
-        print(f"File {file} does not exist, skipping...")
-        continue
-    else:
-        print(f"TESTING {file}...")
+    dfs = {}
+    week_list = []
 
-        init_df = pd.read_excel(file)
+    for file in files:
+        if not file.exists():
+            print(f"File {file} does not exist, skipping...")
+            continue
+        else:
+            print(f"TESTING {file}...")
 
-        # Only include those who agreed to participate:
-        df = init_df[init_df[PARTICIPANT_INFO_AGREEMENT] == "Yes"]
+            init_df = pd.read_excel(file)
 
-        print(f"columns in df: {df["What master's programme do you follow?"]}")
+            # Only include those who agreed to participate:
+            df = init_df[init_df[PARTICIPANT_INFO_AGREEMENT] == "Yes"]
 
-        df = sort_education.sort_by_masters(df)
+            # df = sort_education.sort_by_masters(df)
 
-        week_name = "Week" + file.stem.split("_")[1]
-        week_list.append(week_name)
-        # df.set_index("Anon_ID", inplace=True)
+            week_name = "Week" + file.stem.split("_")[1]
+            week_list.append(week_name)
+            # df.set_index("Anon_ID", inplace=True)
 
-        # Only include relevant columns:
-        dfs[week_name] = init_df[include_in_df].copy()
+            # Only include relevant columns:
+            dfs[week_name] = init_df[include_in_df].copy()
+
+            return dfs
+
+dfs = read_and_sort(ANON_FILES, include_in_df)
 
 # TEST = count_columns(dfs["Week5"],["This course is relevant for me in my future"], likert_6pt)
 # print("Value count test:\n", TEST)
@@ -105,9 +111,7 @@ for file in ANON_FILES:
 # fig, ax = plotting_data.butterfly(TEST2.transpose())
 # plt.show()
 
-import test
-
-timeseries = test.time_series_df(dfs, "I felt confident in working with the methodology today", "Anon_ID",False)
+timeseries = timeseries.time_series_df(dfs, "I felt confident in working with the methodology today", "Anon_ID",False)
 
 count_timeseries = count_columns(timeseries, week_list, likert_6pt)
 print("Timeseries:\n", timeseries)

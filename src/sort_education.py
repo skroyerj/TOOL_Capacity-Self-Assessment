@@ -1,8 +1,14 @@
-def sort_by_masters(df):
+import pandas as pd
 
-    df["Education"] = df["What master's programme do you follow?"]
-    df.loc[df["What master's programme did you follow?"] == "I am still on my bachelor's", "Education"] = df["What bachelor's programme did you follow?"]
-    sorted_df = df.sort_values(by="Education", key=lambda col: col.str.lower())
+def sort_by_masters(dfs: pd.DataFrame) -> pd.DataFrame:
+    """ Sort by education (current master's programme or not-yet-completed bachelor's programme)."""
+    for df in dfs:
+        df["Education"]
+        print("Master's: ",df["What master's programme do you follow?"])
+        df.loc[df["What master's programme did you follow?"] == "I am still on my bachelor's", "Education"] = df["What bachelor's programme did you follow?"]
+        sorted_df = df.sort_values(by="Education", key=lambda col: col.str.lower())
+
+        sorted_dfs[df.name] = sorted_df
 
     return sorted_df
 

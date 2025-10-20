@@ -1,22 +1,22 @@
-import plotly.graph_objects as go
-# import plotting_data
-import pandas as pd
-from functools import reduce
+from pathlib import Path
 
-def time_series_df(dfs, question, index_by, to_excel=False):
-    """ Create a dataframe for each question to see progression of answers over time. """
+import main_analysis as ma
+import sort_education
 
-    week_dfs = []
+ANON_FILES = [
+          Path("data/output_data/AGILE_5_anon.xlsx"),
+          Path("data/output_data/AGILE_6_anon.xlsx"),
+          Path("data/output_data/AGILE_7_anon.xlsx"),
+          Path("data/output_data/AGILE_8_anon.xlsx"),
+          Path("data/output_data/AGILE_9_anon.xlsx"),
+          Path("data/output_data/AGILE_10_anon.xlsx"),
+          Path("data/output_data/AGILE_11_anon.xlsx"),
+          Path("data/output_data/AGILE_12_anon.xlsx"),
+          Path("data/output_data/AGILE_13_anon.xlsx")]
 
-    # time_series = dataframe.groupby(index_by)[question].value_counts(normalize=True).unstack().fillna(0)
-    for week_name, df in dfs.items():
-        week_dfs.append(df[[index_by, question]].rename(columns={question: week_name}))
+dfs = ma.dfs(ANON_FILES)
 
-    time_series = reduce(lambda left, right: pd.merge(left, right, on=index_by, how="outer"), week_dfs).fillna(0)
+print("Names of dfs'", dfs.name)
+# Sort by education (current master's programme or not-yet-completed bachelor's programme)
 
-    time_series = time_series.sort_values(index_by).reset_index(drop=True)
 
-    if to_excel:
-        time_series.to_excel("data/combined_qs/" + str(question)+".xlsx", index=False)
-
-    return time_series
