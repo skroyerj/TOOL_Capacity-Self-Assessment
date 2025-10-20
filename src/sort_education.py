@@ -2,6 +2,8 @@ import pandas as pd
 
 def sort_by_masters(dfs: pd.DataFrame) -> pd.DataFrame:
     """ Sort by education (current master's programme or not-yet-completed bachelor's programme)."""
+    sorted_dfs = {}
+    
     for df in dfs:
         df["Education"]
         print("Master's: ",df["What master's programme do you follow?"])

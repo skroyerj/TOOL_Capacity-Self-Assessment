@@ -1,42 +1,46 @@
 
 # --------------------------------
 # statement for agreeing in the survey
-PARTICIPANT_INFO_AGREEMENT = "I have read the participant information and consent to my data being collected and used in anonymised form for this study."
+def to_include() -> str:
 
+    PARTICIPANT_INFO_AGREEMENT = "I have read the participant information and consent to my data being collected and used in anonymised form for this study."
+    # --------------------------------
+    # Questions to include in the analysis:
+    MOTIVATION = [
+        "I felt confident in working with the methodology today",
+        "I am interested in the methodology of this course",
+        "This course is relevant for me in my future",
+        "I want to gain practical knowledge",
+        "I want to gain theoretical knowledge",
+        "I feel like I know more than I did last week",
+        "I feel that I have influence and responsibility in my group, and that my inclusion and opinions are valued"
+    ]
 
-# --------------------------------
-# Questions to include in the analysis:
-MOTIVATION = [
-    "I felt confident in working with the methodology today",
-    "I am interested in the methodology of this course",
-    "This course is relevant for me in my future",
-    "I want to gain practical knowledge",
-    "I want to gain theoretical knowledge",
-    "I feel like I know more than I did last week",
-    "I feel that I have influence and responsibility in my group, and that my inclusion and opinions are valued"
-]
+    CAPACITY = [
+        "I feel like I can use my (priorly learned) skills in the course",
+        "I feel like I am acquiring new skills every week with the Agile methodology",
+        "The teacher",
+        "The TA's",
+        "Other students"
+    ]
 
-CAPACITY = [
-    "I feel like I can use my (priorly learned) skills in the course",
-    "I feel like I am acquiring new skills every week with the Agile methodology",
-    "The teacher",
-    "The TA's",
-    "Other students"
-]
+    UNCERTAINTY = [
+        "How much uncertainty do you encounter in this course regarding the end goal at this point?",
+        "How much uncertainty did you encounter in the Agile methodology from today?",
+        "How easy or difficult would it be to make changes to your design at this stage?"
+    ]
+    '''What is relevant to include in the dataframe:'''
+    INFO = ["Anon_ID"] + [PARTICIPANT_INFO_AGREEMENT]
 
-UNCERTAINTY = [
-    "How much uncertainty do you encounter in this course regarding the end goal at this point?",
-    "How much uncertainty did you encounter in the Agile methodology from today?",
-    "How easy or difficult would it be to make changes to your design at this stage?"
-]
-'''What is relevant to include in the dataframe:'''
-INFO = ["Anon_ID"] + [PARTICIPANT_INFO_AGREEMENT]
+    ALL_Qs = MOTIVATION + CAPACITY + UNCERTAINTY
 
-ALL_Qs = MOTIVATION + CAPACITY + UNCERTAINTY
+    include_in_df = INFO + ALL_Qs
 
-include_in_df = INFO + ALL_Qs
+    likert_6pt = ["Completely disagree", "Mostly disagree", "Slightly disagree", "Slightly agree", "Mostly agree", "Completely agree"]
 
-likert_6pt = ["Completely disagree", "Mostly disagree", "Slightly disagree", "Slightly agree", "Mostly agree", "Completely agree"]
+    return PARTICIPANT_INFO_AGREEMENT, INFO, ALL_Qs, include_in_df, likert_6pt
+
+PARTICIPANT_INFO_AGREEMENT, INFO, ALL_Qs, include_in_df, likert_6pt = to_include()
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -98,7 +102,7 @@ def read_and_sort(files: list[Path], columns_to_include: str()) -> pd.DataFrame:
             # Only include relevant columns:
             dfs[week_name] = init_df[include_in_df].copy()
 
-            return dfs
+    return dfs
 
 dfs = read_and_sort(ANON_FILES, include_in_df)
 
@@ -112,13 +116,13 @@ dfs = read_and_sort(ANON_FILES, include_in_df)
 # plt.show()
 
 timeseries = timeseries.time_series_df(dfs, "I felt confident in working with the methodology today", "Anon_ID",False)
-
+"""
 count_timeseries = count_columns(timeseries, week_list, likert_6pt)
 print("Timeseries:\n", timeseries)
 print("Counted timeseries:\n", count_timeseries)
 
 fig2 = plotting_data.stacked_area(count_timeseries, "I felt confident in working with the methodology today")
-
+"""
 
 
 
