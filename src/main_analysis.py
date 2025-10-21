@@ -100,7 +100,7 @@ def read_and_sort(files: list[Path], columns_to_include: str()) -> pd.DataFrame:
             # df.set_index("Anon_ID", inplace=True)
 
             # Only include relevant columns:
-            dfs[week_name] = init_df[include_in_df].copy()
+            dfs[week_name] = init_df[include_in_df].copy() #dict of dataframes
 
     return dfs
 
