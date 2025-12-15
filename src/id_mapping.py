@@ -9,11 +9,7 @@ INPUT_FILES = [Path("data/input_data/AGILE_5.xlsx"),
           Path("data/input_data/AGILE_6.xlsx"),
           Path("data/input_data/AGILE_7.xlsx"),
           Path("data/input_data/AGILE_8.xlsx"),
-          Path("data/input_data/AGILE_9.xlsx"),
-          Path("data/input_data/AGILE_10.xlsx"),
-          Path("data/input_data/AGILE_11.xlsx"),
-          Path("data/input_data/AGILE_12.xlsx"),
-          Path("data/input_data/AGILE_13.xlsx")]
+          Path("data/input_data/AGILE_9.xlsx")]
 
     
 OUTPUT_DIR = Path("data/output_data")  # hvor skal anonymiseret gemmes?
