@@ -7,6 +7,9 @@ data/id_map.csv
 # Anonymised data (can be shared, but not needed in repo)
 data/output_data/*
 
+# Figures (can be shared, but not needed in repo)
+data/figures
+
 # Standard Python ignores
 __pycache__/
 *.pyc

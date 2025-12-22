@@ -145,9 +145,52 @@ for key in flat_data:
 # Convert it
 dataframes = visualisation.restructure_flat_dict(flat_data)
 
-gui.show_visualization_menu(dataframes, MOTIVATION + CAPACITY)
 
-# Now use the visualization functions as normal
+
+# Extract study lines and weeks from keys, count responses
+data_dict = {}
+for name, data in flat_data.items():
+    parts = name.split("_")
+    study_line = parts[0]  # 'arch', 'archeng', 'oth'
+    week = parts[2]  # 'Week5', 'Week6', etc.
+    
+    # Count unique respondents
+    response_count = data["Anon_ID"].nunique()
+    
+    # Store in nested dictionary
+    if study_line not in data_dict:
+        data_dict[study_line] = {}
+    data_dict[study_line][week] = response_count
+
+# Create dataframe from the nested dictionary
+resp_df = pd.DataFrame.from_dict(data_dict, orient='index')
+
+# Replace NaN with 0
+resp_df = resp_df.fillna(0)
+
+# Sort columns by week number
+resp_df = resp_df.reindex(sorted(resp_df.columns, key=lambda x: int(x.replace('Week', ''))), axis=1)
+
+# Add totals row
+resp_df.loc['Total'] = resp_df.sum()
+
+print("Response Rates:\n", resp_df)
+
+
+# Print response rates for each educational background for each week in ONE excel file
+response_rates_dir = Path("figures/response_rates/")
+response_rates_dir.mkdir(parents=True, exist_ok=True)
+
+with pd.ExcelWriter(response_rates_dir / "response_rates_by_education.xlsx") as writer:
+    resp_df.to_excel(writer, sheet_name=key, index=True)
+
+
+"""
+GUI Visualization Menu
+"""
+# gui.show_visualization_menu(dataframes, MOTIVATION + CAPACITY)
+
+# --------------------------------
 # fig1 = visualisation.plot_question_over_time(dataframes, 'I am interested in the methodology of this course')
 # plt.show()
 

@@ -30,7 +30,7 @@ def restructure_flat_dict(flat_dict):
     
     return nested
 
-def prepare_likert_data(dataframes_dict, likert_columns):
+# def prepare_likert_data(dataframes_dict, likert_columns):
     """
     Prepare data from multiple weeks and education groups.
     
@@ -63,7 +63,7 @@ def prepare_likert_data(dataframes_dict, likert_columns):
 def plot_question_over_time(dataframes_dict, question_col, title=None):
     """
     Plot a single question's responses over time, grouped by education.
-    Shows mean with confidence intervals.
+    Shows median with interquartile range (IQR).
     """
     fig, ax = plt.subplots(figsize=(12, 6))
     
@@ -75,39 +75,57 @@ def plot_question_over_time(dataframes_dict, question_col, title=None):
     colors = sns.color_palette("husl", len(education_programs))
     
     for edu, color in zip(sorted(education_programs), colors):
-        means = []
-        stds = []
+        medians = []
+        q1s = []
+        q3s = []
         ns = []
         
         for week in weeks:
             if edu in dataframes_dict[week] and question_col in dataframes_dict[week][edu].columns:
                 df = dataframes_dict[week][edu]
-                means.append(df[question_col].mean())
-                stds.append(df[question_col].std())
-                ns.append(df[question_col].notna().sum())
+                values = df[question_col].dropna()
+                
+                if len(values) > 0:
+                    medians.append(values.median())
+                    q1s.append(values.quantile(0.25))
+                    q3s.append(values.quantile(0.75))
+                    ns.append(len(values))
+                else:
+                    medians.append(np.nan)
+                    q1s.append(np.nan)
+                    q3s.append(np.nan)
+                    ns.append(0)
             else:
-                means.append(np.nan)
-                stds.append(np.nan)
+                medians.append(np.nan)
+                q1s.append(np.nan)
+                q3s.append(np.nan)
                 ns.append(0)
         
-        # Calculate standard error for confidence intervals
-        sems = [std / np.sqrt(n) if n > 0 else 0 for std, n in zip(stds, ns)]
+        # Plot median line
+        ax.plot(
+            weeks, medians,
+            marker='o', label=edu,
+            color=color, linewidth=2, markersize=8
+        )
         
-        ax.plot(weeks, means, marker='o', label=edu, color=color, linewidth=2, markersize=8)
-        ax.fill_between(weeks, 
-                        [m - 1.96*sem for m, sem in zip(means, sems)],
-                        [m + 1.96*sem for m, sem in zip(means, sems)],
-                        alpha=0.2, color=color)
+        # Plot IQR band (Q1–Q3)
+        ax.fill_between(
+            weeks, q1s, q3s,
+            alpha=0.25, color=color
+        )
     
     ax.set_xlabel('Week', fontsize=12)
-    ax.set_ylabel('Mean Score', fontsize=12)
+    ax.set_ylabel('Median Score', fontsize=12)
     ax.set_title(title or question_col, fontsize=14, fontweight='bold')
     ax.legend(title='Education', bbox_to_anchor=(1.05, 1), loc='upper left')
     ax.set_xticks(weeks)
+    ax.set_ylim(1, 6)
+    ax.set_yticks(range(1, 7))
     ax.grid(True, alpha=0.3)
     
     plt.tight_layout()
     return fig
+
 
 def plot_stacked_distribution(dataframes_dict, question_col, week, title=None):
     """
@@ -161,51 +179,122 @@ def plot_stacked_distribution(dataframes_dict, question_col, week, title=None):
     plt.tight_layout()
     return fig
 
-def plot_heatmap_all_questions(dataframes_dict, likert_columns, week):
-    """
-    Create a heatmap showing mean scores for all questions across education programs
-    for a specific week.
-    """
-    edu_programs = sorted(dataframes_dict[week].keys())
-    
-    # Build matrix
-    matrix = []
-    for col in likert_columns:
-        row = []
+def plot_stacked_distribution_multiweek(
+    dataframes_dict,
+    question_col,
+    weeks,
+    title=None
+):
+    # Tillad både int og liste
+    if isinstance(weeks, int):
+        weeks = [weeks]
+
+    weeks = [w for w in weeks if w in dataframes_dict]
+    if not weeks:
+        print("No valid weeks provided")
+        return None
+
+    # Find alle education programs på tværs af uger
+    edu_programs = sorted({
+        edu
+        for w in weeks
+        for edu in dataframes_dict[w].keys()
+    })
+
+    likert_values = [1,2,3,4,5,6]  # Antag faste Likert-værdier
+
+    n_weeks = len(weeks)
+    n_cols = n_weeks if n_weeks <= 3 else 3
+    n_rows = (n_weeks + n_cols - 1) // n_cols
+
+    fig, axes = plt.subplots(
+        n_rows, n_cols,
+        figsize=(18, 5 * n_rows),
+        squeeze=False
+    )
+
+    colors = sns.color_palette("vlag_r", len(likert_values))
+
+    for idx, week in enumerate(weeks):
+        ax = axes[idx // n_cols][idx % n_cols]
+
+        data = {val: [] for val in likert_values}
+
         for edu in edu_programs:
-            if col in dataframes_dict[week][edu].columns:
-                mean_val = dataframes_dict[week][edu][col].mean()
-                row.append(mean_val)
+            if (
+                edu in dataframes_dict[week]
+                and question_col in dataframes_dict[week][edu].columns
+            ):
+                counts = dataframes_dict[week][edu][question_col].value_counts()
+                total = counts.sum()
+                for val in likert_values:
+                    pct = (counts.get(val, 0) / total * 100) if total > 0 else 0
+                    data[val].append(pct)
             else:
-                row.append(np.nan)
-        matrix.append(row)
-    
-    fig, ax = plt.subplots(figsize=(12, max(8, len(likert_columns) * 0.5)))
-    
-    # Shorten question labels for readability
-    short_labels = [col[:50] + '...' if len(col) > 50 else col for col in likert_columns]
-    
-    sns.heatmap(matrix, 
-                xticklabels=edu_programs,
-                yticklabels=short_labels,
-                annot=True, 
-                fmt='.2f',
-                cmap='vlag_r',
-                center=3.5,  # Assuming 6-point Likert scale (1-5)
-                ax=ax,
-                cbar_kws={'label': 'Mean Score'})
-    
-    ax.set_title(f'Mean Scores by Education Program - Week {week}', 
-                 fontsize=14, fontweight='bold', pad=20)
-    plt.xticks(rotation=45, ha='right')
-    plt.yticks(rotation=0)
-    plt.tight_layout()
+                for val in likert_values:
+                    data[val].append(0)
+
+        bottom = np.zeros(len(edu_programs))
+        for val, color in zip(likert_values, colors):
+            ax.bar(
+                edu_programs,
+                data[val],
+                bottom=bottom,
+                label=str(val),
+                color=color
+            )
+            bottom += data[val]
+
+        ax.set_title(f"Week {week}", fontsize=12, fontweight="bold")
+        ax.set_ylim(0, 100)
+        ax.tick_params(axis="x", rotation=45)
+
+        # Kun venstre kolonne får y-label
+        if idx % n_cols == 0:
+            ax.set_ylabel("Percentage", fontsize=12)
+        else:
+            ax.tick_params(axis="y", labelleft=False)
+        
+        
+
+    # Skjul tomme subplots
+    for idx in range(n_weeks, n_rows * n_cols):
+        axes[idx // n_cols][idx % n_cols].set_visible(False)
+
+    # # Fælles legend
+    # handles, labels = ax.get_legend_handles_labels()
+    # ax.legend(
+    #     handles,
+    #     labels,
+    #     title="Response",
+    #     bbox_to_anchor=(1.02, 0.5),
+    #     loc="center left"
+    # )
+    ax.legend(title='Response', bbox_to_anchor=(1.05, 1), loc='upper left')
+    ax.set_ylim(0, 100)
+
+    plt.suptitle(
+        title or f"{question_col}",
+        fontsize=16,
+        fontweight="bold",
+        y=0.98
+    )
+
+    # plt.tight_layout()
+    fig.subplots_adjust(
+    left=0.05,
+    right=0.9,
+    top=0.85,
+    bottom=0.175,
+    wspace=0.3,
+    hspace=0.4
+)
     return fig
 
 def plot_heatmap_questions_grid(dataframes_dict,
     likert_columns,
-    weeks=None,
-):
+    weeks=None):
+
     if weeks is None:
         weeks = sorted(dataframes_dict.keys())
 
@@ -217,7 +306,7 @@ def plot_heatmap_questions_grid(dataframes_dict,
     })
 
     n_weeks = len(weeks)
-    n_cols = 3
+    n_cols = n_weeks if n_weeks <= 3 else 3
     n_rows = (n_weeks + n_cols - 1) // n_cols
 
     fig, axes = plt.subplots(
@@ -225,6 +314,9 @@ def plot_heatmap_questions_grid(dataframes_dict,
         figsize=(18, 5 * n_rows),
         squeeze=False
     )
+
+    # Create axis for shared colorbar (right side)
+    cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
 
     for idx, week in enumerate(weeks):
         ax = axes[idx // n_cols][idx % n_cols]
@@ -239,7 +331,7 @@ def plot_heatmap_questions_grid(dataframes_dict,
                     and question in dataframes_dict[week][edu].columns
                 ):
                     row.append(
-                        dataframes_dict[week][edu][question].mean()
+                        dataframes_dict[week][edu][question].median()
                     )
                 else:
                     row.append(np.nan)
@@ -258,7 +350,10 @@ def plot_heatmap_questions_grid(dataframes_dict,
             fmt=".2f",
             cmap="vlag_r",
             center=3.5,
+            vmin=1,
+            vmax=6,
             cbar=idx == 0,  # one shared colorbar
+            cbar_ax=cbar_ax if idx == 0 else None,
             ax=ax
         )
 
@@ -274,12 +369,19 @@ def plot_heatmap_questions_grid(dataframes_dict,
         axes[idx // n_cols][idx % n_cols].set_visible(False)
 
     plt.suptitle(
-        "Mean Likert Scores by Week",
+        "To perform the tasks today, I felt like seeking support from... (median value across all weeks)",
         fontsize=16,
         fontweight="bold",
         y=0.98
     )
-    plt.tight_layout()
+    fig.subplots_adjust(
+    left=0.07,
+    right=0.9,   # plads til colorbar
+    top=0.8,
+    bottom=0.265,
+    wspace=0.13,
+    hspace=0.35
+    )
     return fig
 
 
@@ -289,11 +391,21 @@ def create_summary_report(dataframes_dict, likert_columns):
     Create a comprehensive visualization with multiple subplots.
     """
     n_questions = len(likert_columns)
-    n_cols = 2
-    n_rows = (n_questions + 1) // 2
+    n_cols = 3
+    n_rows = (n_questions + n_cols - 1) // n_cols
     
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(16, 5 * n_rows))
     axes = axes.flatten()
+
+    global_min = np.inf
+    global_max = -np.inf
+
+    for week_data in dataframes_dict.values():
+        for df in week_data.values():
+            for col in likert_columns:
+                if col in df.columns:
+                    global_min = min(global_min, df[col].min())
+                    global_max = max(global_max, df[col].max())
     
     weeks = sorted(dataframes_dict.keys())
     education_programs = set()
@@ -324,9 +436,16 @@ def create_summary_report(dataframes_dict, likert_columns):
         ax.set_ylabel('Mean Score', fontsize=9)
         ax.set_xticks(weeks)
         ax.grid(True, alpha=0.3)
+        ax.set_ylim(global_min, global_max)
         
         if idx == 0:
             ax.legend(title='Education', fontsize=8)
+        
+        col_idx = idx % n_cols
+
+        if col_idx != 0:
+            ax.set_ylabel("")
+            ax.tick_params(axis="y", labelleft=False)
     
     # Hide extra subplots
     for idx in range(len(likert_columns), len(axes)):

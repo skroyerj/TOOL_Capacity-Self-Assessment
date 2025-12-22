@@ -21,12 +21,31 @@ def show_visualization_menu(dataframes, likert_questions):
             
             question = input(f"\nEnter choice (1-{len(likert_questions)}): ")
             question = likert_questions[int(question)-1]
+
             fig = visualisation.plot_question_over_time(dataframes, question)
             plt.show()
         elif choice == '2':
-            question = input("Enter question column name: ")
-            week = int(input("Enter week number: "))
-            fig = visualisation.plot_stacked_distribution(dataframes, question, week)
+            print("\nAvailable Questions:")
+            for i, question in enumerate(likert_questions, start=1):
+                print(f"{i}. {question}")
+            
+            question = input(f"\nEnter choice (1-{len(likert_questions)}): ")
+            question = likert_questions[int(question)-1]
+
+            raw_input = input("Enter week number (comma separated, 5-9, or 0 for all weeks): ")
+
+            weeks = [
+                int(w.strip())
+                for w in raw_input.split(',')
+                if w.strip().isdigit()
+            ]
+            print(weeks)
+
+
+            if weeks == [0]:
+                weeks = None  # Brug None for at indikere alle uger
+
+            fig = visualisation.plot_stacked_distribution_multiweek(dataframes, question,weeks,title=None)
             plt.show()
         elif choice == '3':
             print("\nAvailable Questions:")
@@ -47,12 +66,18 @@ def show_visualization_menu(dataframes, likert_questions):
 
             selected_questions = [likert_questions[i] for i in selected_indices]
 
-            week = int(input("Enter week number: "))
+            raw_input = input("Enter week number (comma separated, 5-9, or 0 for all weeks): ")
 
-            if week == 0:
-                week = None  # Brug None for at indikere alle uger
+            weeks = [
+                int(w.strip())
+                for w in raw_input.split(',')
+                if w.strip().isdigit()
+            ]
 
-            fig = visualisation.plot_heatmap_questions_grid(dataframes, selected_questions, week)
+            if weeks == [0]:
+                weeks = None  # Brug None for at indikere alle uger
+
+            fig = visualisation.plot_heatmap_questions_grid(dataframes, selected_questions, weeks)
             plt.show()
 
         elif choice == '4':
