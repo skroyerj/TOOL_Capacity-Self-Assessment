@@ -71,6 +71,23 @@ def plot_question_over_time(dataframes_dict, question_col, title=None):
     education_programs = set()
     for week_data in dataframes_dict.values():
         education_programs.update(week_data.keys())
+
+    # Collect all values to determine y-axis range
+    all_values = []
+    for week in weeks:
+        for edu in education_programs:
+            if edu in dataframes_dict[week] and question_col in dataframes_dict[week][edu].columns:
+                values = dataframes_dict[week][edu][question_col].dropna()
+                all_values.extend(values.tolist())
+    
+    # Determine y-axis range from actual data
+    if all_values:
+        y_min = int(min(all_values))
+        y_max = int(max(all_values))
+        y_ticks = range(y_min, y_max + 1)
+    else:
+        y_min, y_max = 1, 6
+        y_ticks = range(1, 7)
     
     colors = sns.color_palette("husl", len(education_programs))
     
@@ -119,8 +136,8 @@ def plot_question_over_time(dataframes_dict, question_col, title=None):
     ax.set_title(title or question_col, fontsize=14, fontweight='bold')
     ax.legend(title='Education', bbox_to_anchor=(1.05, 1), loc='upper left')
     ax.set_xticks(weeks)
-    ax.set_ylim(1, 6)
-    ax.set_yticks(range(1, 7))
+    ax.set_ylim(y_min, y_max)  # Dynamic based on data
+    ax.set_yticks(y_ticks)  # Dynamic tick marks
     ax.grid(True, alpha=0.3)
     
     plt.tight_layout()
@@ -183,9 +200,10 @@ def plot_stacked_distribution_multiweek(
     dataframes_dict,
     question_col,
     weeks,
+    likert_mapping,  # NEW: Pass the mapping dictionary
     title=None
 ):
-    # Tillad både int og liste
+    # Allow both int and list
     if isinstance(weeks, int):
         weeks = [weeks]
 
@@ -194,14 +212,20 @@ def plot_stacked_distribution_multiweek(
         print("No valid weeks provided")
         return None
 
-    # Find alle education programs på tværs af uger
+    # Find all education programs across weeks
     edu_programs = sorted({
         edu
         for w in weeks
         for edu in dataframes_dict[w].keys()
     })
 
-    likert_values = [1,2,3,4,5,6]  # Antag faste Likert-værdier
+    # Extract likert values and labels from the mapping
+    likert_values = sorted(set(likert_mapping.values()))  # Get unique numeric values, sorted
+    likert_labels = {v: k for k, v in likert_mapping.items()}  # Reverse mapping for labels
+    
+    # Determine the range for the colorbar
+    likert_min = min(likert_values)
+    likert_max = max(likert_values)
 
     n_weeks = len(weeks)
     n_cols = n_weeks if n_weeks <= 3 else 3
@@ -240,7 +264,7 @@ def plot_stacked_distribution_multiweek(
                 edu_programs,
                 data[val],
                 bottom=bottom,
-                label=str(val),
+                label=likert_labels.get(val, str(val)),  # Use text labels
                 color=color
             )
             bottom += data[val]
@@ -249,27 +273,16 @@ def plot_stacked_distribution_multiweek(
         ax.set_ylim(0, 100)
         ax.tick_params(axis="x", rotation=45)
 
-        # Kun venstre kolonne får y-label
+        # Only left column gets y-label
         if idx % n_cols == 0:
             ax.set_ylabel("Percentage", fontsize=12)
         else:
             ax.tick_params(axis="y", labelleft=False)
-        
-        
 
-    # Skjul tomme subplots
+    # Hide empty subplots
     for idx in range(n_weeks, n_rows * n_cols):
         axes[idx // n_cols][idx % n_cols].set_visible(False)
 
-    # # Fælles legend
-    # handles, labels = ax.get_legend_handles_labels()
-    # ax.legend(
-    #     handles,
-    #     labels,
-    #     title="Response",
-    #     bbox_to_anchor=(1.02, 0.5),
-    #     loc="center left"
-    # )
     ax.legend(title='Response', bbox_to_anchor=(1.05, 1), loc='upper left')
     ax.set_ylim(0, 100)
 
@@ -280,16 +293,16 @@ def plot_stacked_distribution_multiweek(
         y=0.98
     )
 
-    # plt.tight_layout()
     fig.subplots_adjust(
-    left=0.05,
-    right=0.9,
-    top=0.85,
-    bottom=0.175,
-    wspace=0.3,
-    hspace=0.4
-)
+        left=0.05,
+        right=0.9,
+        top=0.85,
+        bottom=0.175,
+        wspace=0.3,
+        hspace=0.4
+    )
     return fig
+
 
 def plot_heatmap_questions_grid(dataframes_dict,
     likert_columns,
@@ -455,6 +468,75 @@ def create_summary_report(dataframes_dict, likert_columns):
                  fontsize=16, fontweight='bold', y=0.995)
     plt.tight_layout()
     return fig
+
+
+def plot_histogram_multiweek(
+    dataframes_dict,
+    question_cols,   # <-- LISTE af kolonnenavne
+    weeks,
+    bins=5,
+    title=None
+):
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # Tillad både int og liste
+    if isinstance(weeks, int):
+        weeks = [weeks]
+
+    weeks = [w for w in weeks if w in dataframes_dict]
+    if not weeks:
+        print("No valid weeks provided")
+        return None
+
+    n_weeks = len(weeks)
+    n_cols = n_weeks if n_weeks <= 3 else 3
+    n_rows = (n_weeks + n_cols - 1) // n_cols
+
+    fig, axes = plt.subplots(
+        n_rows, n_cols,
+        figsize=(18, 5 * n_rows),
+        squeeze=False
+    )
+
+    for idx, week in enumerate(weeks):
+        ax = axes[idx // n_cols][idx % n_cols]
+
+        summed_scores = []
+
+        for edu, df in dataframes_dict[week].items():
+
+            # behold kun kolonner der faktisk findes
+            cols = [c for c in question_cols if c in df.columns]
+            if not cols:
+                continue
+
+            # SUM pr. respondent (række)
+            row_sums = df[cols].sum(axis=1, skipna=True)
+
+            summed_scores.extend(row_sums.dropna().values)
+
+        if not summed_scores:
+            ax.set_title(f"Week {week} (no data)")
+            continue
+
+        ax.hist(summed_scores, bins=bins)
+        ax.set_xticks(range(len(question_cols)-1, (len(question_cols) * 6) +1, 5))
+        ax.set_title(f"Week {week}", fontsize=12, fontweight="bold")
+        ax.set_xlabel("Summed Likert score")
+        ax.set_ylabel("Frequency")
+
+    # Fjern tomme subplots
+    for i in range(idx + 1, n_rows * n_cols):
+        fig.delaxes(axes[i // n_cols][i % n_cols])
+
+    if title:
+        fig.suptitle(title, fontsize=16, fontweight="bold")
+
+    plt.tight_layout()
+    return fig
+
+
 
 # Example usage:
 """

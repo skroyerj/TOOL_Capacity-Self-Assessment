@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 import visualisation
-import likert_conversion
+from main_analysis import LIKERTS
 from main_analysis import dataframes
 
 import os
@@ -26,7 +26,8 @@ for i, q in enumerate(likert_questions, start=10):
     fig = visualisation.plot_stacked_distribution_multiweek(
         dataframes,
         q,
-        weeks = [5,7,9]
+        weeks,
+        LIKERTS["likert_6pt"]
     )
 
     fig.savefig(
@@ -103,7 +104,65 @@ for i, q in enumerate(likert_questions, start=1):
     fig = visualisation.plot_stacked_distribution_multiweek(
         dataframes,
         q,
-        weeks = [5,7,9]
+        weeks,
+        LIKERTS["likert_6pt"]
+    )
+
+    fig.savefig(
+        f"{dir_path}stacked_W5-7-9_Q{i}.png",
+        dpi=300,
+        bbox_inches="tight"
+    )
+    plt.close(fig)
+# """
+
+
+# ------------------------------------------------------------------------------
+# Individual mappings for Q13-15
+# """
+likert_questions = [
+        "How much uncertainty do you encounter in this course regarding the end goal at this point?",
+        "How much uncertainty did you encounter in the Agile methodology from today?",
+        "How easy or difficult would it be to make changes to your design at this stage?"
+    ]
+
+for i, q in enumerate(likert_questions, start=13):
+    fig = visualisation.plot_question_over_time(
+        dataframes,
+        q
+    )
+
+    fig.savefig(
+        f"{dir_path}over-time_Q{i}.png",
+        dpi=300,
+        bbox_inches="tight"
+    )
+    plt.close(fig)
+# """
+# -------------------------------------------------------------------------------
+# Stacked distributions for Q13-14
+# """
+for i, q in enumerate(likert_questions[:2], start=13):
+    fig = visualisation.plot_stacked_distribution_multiweek(
+        dataframes,
+        q,
+        weeks,
+        LIKERTS["likert_7pt_1"]
+    )
+
+    fig.savefig(
+        f"{dir_path}stacked_W5-7-9_Q{i}.png",
+        dpi=300,
+        bbox_inches="tight"
+    )
+    plt.close(fig)
+
+for i, q in enumerate(likert_questions[2:], start=15):
+    fig = visualisation.plot_stacked_distribution_multiweek(
+        dataframes,
+        q,
+        weeks,
+        LIKERTS["likert_7pt_2"]
     )
 
     fig.savefig(

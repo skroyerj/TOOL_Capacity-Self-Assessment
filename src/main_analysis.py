@@ -34,16 +34,32 @@ def to_include() -> str:
 
     EDU = ["What bachelor's programme did you follow?", "What master's programme do you follow?"]
 
-    ALL_Qs = MOTIVATION + CAPACITY
+    ALL_Qs = MOTIVATION + CAPACITY + UNCERTAINTY
 
     include_in_df = INFO + EDU + ALL_Qs
 
-    likert_6pt = ["Completely disagree", "Mostly disagree", "Slightly disagree", "Slightly agree", "Mostly agree", "Completely agree"]
+    likert_6pt = {"Completely disagree": 1, "Mostly disagree": 2, "Slightly disagree": 3, "Slightly agree": 4, "Mostly agree": 5, "Completely agree": 6}
 
-    return PARTICIPANT_INFO_AGREEMENT, EDU, INFO, MOTIVATION, CAPACITY, include_in_df, likert_6pt
+    likert_7pt_1 = {"None at all": 1, "Very little": 2, "Little": 3, "Some": 4, "Much": 5, "A great deal": 6, "Extreme amount": 7}
 
-PARTICIPANT_INFO_AGREEMENT, EDU, INFO, MOTIVATION, CAPACITY, include_in_df, likert_6pt = to_include()
+    likert_7pt_2 = {"Impossible": 1,"Very difficult": 2, "Difficult": 3, "Somewhat difficult": 4, "Somewhat easy": 5, "Easy": 6, "Very easy": 7}
+    return PARTICIPANT_INFO_AGREEMENT, EDU, INFO, MOTIVATION, CAPACITY, UNCERTAINTY, include_in_df, likert_6pt, likert_7pt_1, likert_7pt_2
 
+PARTICIPANT_INFO_AGREEMENT, EDU, INFO, MOTIVATION, CAPACITY, UNCERTAINTY, include_in_df, likert_6pt, likert_7pt_1, likert_7pt_2 = to_include()
+
+LIKERTS = {
+    "likert_6pt": likert_6pt,
+    "likert_7pt_1": likert_7pt_1,
+    "likert_7pt_2": likert_7pt_2
+}
+
+REV_LIKERTS = {
+    "likert_6pt": {v: k for k, v in likert_6pt.items()},
+    "likert_7pt_1": {v: k for k, v in likert_7pt_1.items()},
+    "likert_7pt_2": {v: k for k, v in likert_7pt_2.items()}
+}
+
+# print("Reversed Likert Scales:\n", REV_LIKERTS)
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -139,8 +155,9 @@ flat_data = dfs
 
 # Convert all your dataframes
 for key in flat_data:
-    flat_data[key] = likert_conversion.convert_likert_to_numeric(flat_data[key], MOTIVATION + CAPACITY)
-
+    flat_data[key] = likert_conversion.convert_likert_to_numeric(flat_data[key], MOTIVATION + CAPACITY, LIKERTS["likert_6pt"])
+    flat_data[key] = likert_conversion.convert_likert_to_numeric(flat_data[key], UNCERTAINTY[:2], LIKERTS["likert_7pt_1"])
+    flat_data[key] = likert_conversion.convert_likert_to_numeric(flat_data[key], [UNCERTAINTY[2]], LIKERTS["likert_7pt_2"])
 
 # Convert it
 dataframes = visualisation.restructure_flat_dict(flat_data)
@@ -174,7 +191,7 @@ resp_df = resp_df.reindex(sorted(resp_df.columns, key=lambda x: int(x.replace('W
 # Add totals row
 resp_df.loc['Total'] = resp_df.sum()
 
-print("Response Rates:\n", resp_df)
+# print("Response Rates:\n", resp_df)
 
 
 # Print response rates for each educational background for each week in ONE excel file
@@ -182,13 +199,13 @@ response_rates_dir = Path("figures/response_rates/")
 response_rates_dir.mkdir(parents=True, exist_ok=True)
 
 with pd.ExcelWriter(response_rates_dir / "response_rates_by_education.xlsx") as writer:
-    resp_df.to_excel(writer, sheet_name=key, index=True)
+    resp_df.to_excel(writer, sheet_name="Response Rates", index=True)
 
 
 """
 GUI Visualization Menu
 """
-# gui.show_visualization_menu(dataframes, MOTIVATION + CAPACITY)
+gui.show_visualization_menu(dataframes, MOTIVATION + CAPACITY + UNCERTAINTY, LIKERTS)
 
 # --------------------------------
 # fig1 = visualisation.plot_question_over_time(dataframes, 'I am interested in the methodology of this course')
